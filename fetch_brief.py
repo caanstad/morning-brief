@@ -21,7 +21,7 @@ import requests
 
 # ---------- Configuration ----------
 
-USER_AGENT = "morning-brief/1.0 (github.com/<caanstad>/morning-brief)"
+USER_AGENT = "morning-brief/1.0 (github.com/caanstad/morning-brief)"
 OSLO = ZoneInfo("Europe/Oslo")
 MAX_ARTICLES_PER_FEED = 5
 HTTP_TIMEOUT = 20  # seconds
