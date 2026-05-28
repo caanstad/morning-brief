@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Morgenbrief">
+  <meta name="theme-color" content="#1a1a2e">
+  <title>Morgenbrief</title>
+  <style>
+    :root {
+      --bg: #f5f3ee;
+      --card: #ffffff;
+      --ink: #1a1a2e;
+      --muted: #6b6b7a;
+      --accent: #c2410c;
+      --border: #e5e2db;
+      --error: #b91c1c;
+      --error-bg: #fef2f2;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #14141c;
+        --card: #1f1f2e;
+        --ink: #f0eee8;
+        --muted: #9a9aaa;
+        --accent: #fb923c;
+        --border: #2d2d40;
+        --error: #fca5a5;
+        --error-bg: #3f1f1f;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.5;
+      padding: 1rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    header {
+      padding: 1rem 0 1.5rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1.5rem;
+    }
+    h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+    .updated {
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin-top: 0.25rem;
+    }
+    h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0 0 0.75rem;
+      color: var(--accent);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 0.75rem;
+    }
+    .news-card, .weather-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+    }
+    .articles {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .articles li {
+      padding: 0.6rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .articles li:last-child { border-bottom: none; }
+    .art-title {
+      font-weight: 500;
+      margin-bottom: 0.2rem;
+    }
+    .art-title a {
+      color: var(--ink);
+      text-decoration: none;
+    }
+    .art-title a:hover { text-decoration: underline; }
+    .art-desc {
+      font-size: 0.875rem;
+      color: var(--muted);
+    }
+    .error {
+      color: var(--error);
+      background: var(--error-bg);
+      padding: 0.5rem 0.75rem;
+      border-radius: 4px;
+      font-size: 0.875rem;
+      margin: 0;
+    }
+    .today-strip {
+      display: flex;
+      overflow-x: auto;
+      gap: 0.25rem;
+      padding-bottom: 0.5rem;
+      margin-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .hour {
+      min-width: 50px;
+      text-align: center;
+      padding: 0.25rem;
+      font-size: 0.8rem;
+    }
+    .hour-time { color: var(--muted); }
+    .hour-temp { font-weight: 600; font-size: 0.95rem; }
+    .hour-rain { color: #3b82f6; font-size: 0.7rem; min-height: 1em; }
+    table.forecast {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+    table.forecast th {
+      text-align: left;
+      color: var(--muted);
+      font-weight: 500;
+      padding: 0.4rem 0.25rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+    }
+    table.forecast td {
+      padding: 0.4rem 0.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+    table.forecast tr:last-child td { border-bottom: none; }
+    footer {
+      margin-top: 2rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.75rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>☀️ Morgenbrief</h1>
+    <div class="updated">Thursday 28. may 2026 — oppdatert 10:50</div>
+  </header>
+
+  <h2>📰 Nyheter</h2>
+  <div class="grid">
+    <section class="news-card"><h3>VG</h3><ul class="articles"><li><div class="art-title"><a href="https://www.vg.no/i/m0LpXp/meta-vil-at-du-skal-betale-for-instagram-og-facebook" target="_blank" rel="noopener">Meta vil at du skal betale for Instagram- og Facebook-funksjoner</a></div><div class="art-desc">Giganten lanserer pluss-abonnementer.</div></li><li><div class="art-title"><a href="https://www.vg.no/nyheter/i/k0pb2k/midt-i-en-aapen-gate-barker-neshornene-sammen" target="_blank" rel="noopener">Midt i en åpen gate barker neshornene sammen!</a></div><div class="art-desc"></div></li><li><div class="art-title"><a href="https://www.vg.no/rampelys/i/y58bqe/dag-otto-lauritzen-om-bokprosjekt-vanskeligere-enn-jeg-trodde" target="_blank" rel="noopener">Dag Otto Lauritzen om nytt prosjekt: – Vanskeligere enn jeg trodde</a></div><div class="art-desc">Rett før han fyller 70 år, bretter den folkekjære TV-kjendisen ut livets opp- og nedturer.</div></li><li><div class="art-title"><a href="https://www.vg.no/sport/i/bOLoA5/solbakken-moeter-pressen-spillerne-paa-plass-i-oslo" target="_blank" rel="noopener">Solbakken møter pressen - spillerne på plass i Oslo</a></div><div class="art-desc">I dag kommer de norske spillerne en etter en til spillerhotellet i Oslo for første dag av det som forhåpentligvis blir en svært lang landslagssamling.</div></li><li><div class="art-title"><a href="https://www.vg.no/nyheter/i/9pqMRl/svenske-medier-zelenskyj-skal-til-sverige-torsdag" target="_blank" rel="noopener">Svenske medier: Zelenskyj skal til Sverige torsdag</a></div><div class="art-desc">Ukrainas president Volodymyr Zelenskyj kommer til Uppsala i Sverige torsdag, antakelig i forbindelse med donasjon av svenske kampfly til Ukraina.</div></li></ul></section><section class="news-card"><h3>E24</h3><ul class="articles"><li><div class="art-title"><a href="https://e24.no/naeringsliv/i/pBnbb6/stordalen-tvist-med-skatteetaten-skal-behandles-i-hoeyesterett?utm_medium=rss" target="_blank" rel="noopener">Stordalen-tvist med Skatteetaten skal behandles i Høyesterett</a></div><div class="art-desc">Etter seier for hotellkongen i lagmannsretten skal skattesaken få en ny runde i rettssystemet.</div></li><li><div class="art-title"><a href="https://e24.no/boers-og-finans/i/9pqMQ5/andresen-kan-beholde-bygdoey-bryggen?utm_medium=rss" target="_blank" rel="noopener">Andresen kan beholde Bygdøy-bryggen</a></div><div class="art-desc">Katharina Andresen slipper å fjerne bryggen som kommunen mente var ulovlig.</div></li><li><div class="art-title"><a href="https://e24.no/boers-og-finans/i/OkEqmE/oppgang-paa-oslo-boers?utm_medium=rss" target="_blank" rel="noopener">Oppgang på Oslo Børs</a></div><div class="art-desc">Oljeaksjer trekker Oslo Børs oppover.</div></li><li><div class="art-title"><a href="https://e24.no/energi-og-klima/i/vr3blX/venter-oljeinvesteringer-paa-266-mrd?utm_medium=rss" target="_blank" rel="noopener">Venter oljeinvesteringer på 266 mrd.</a></div><div class="art-desc">Fersk telling viser høyere investeringer i olje og gass i 2026 enn tidligere anslått.</div></li><li><div class="art-title"><a href="https://e24.no/norsk-oekonomi/i/JOlqr7/norsk-fastlandsoekonomi-vokste-0-2-prosent-i-foerste-kvartal?utm_medium=rss" target="_blank" rel="noopener">Norsk fastlandsøkonomi vokste 0,2 prosent</a></div><div class="art-desc">Norsk fastlandsøkonomi steg mindre i årets første kvartal enn snittet i fjor.</div></li></ul></section><section class="news-card"><h3>DN</h3><p class="error">⚠️ Kunne ikke hente: Klarte ikke å lese RSS-XML: syntax error: line 1, column 0</p></section><section class="news-card"><h3>kode24</h3><p class="error">⚠️ Kunne ikke hente: HTTP-feil: 404</p></section>
+  </div>
+
+  <h2>🌦 Vær</h2>
+  <div class="grid">
+    <section class="weather-card"><h3>Bønesberget, Bergen</h3><div class="today-strip"><div class="hour"><div class="hour-time">10:00</div><div class="hour-temp">11°</div><div class="hour-rain"></div></div><div class="hour"><div class="hour-time">11:00</div><div class="hour-temp">13°</div><div class="hour-rain"></div></div><div class="hour"><div class="hour-time">12:00</div><div class="hour-temp">14°</div><div class="hour-rain"></div></div><div class="hour"><div class="hour-time">13:00</div><div class="hour-temp">15°</div><div class="hour-rain"></div></div><div class="hour"><div class="hour-time">14:00</div><div class="hour-temp">16°</div><div class="hour-rain"></div></div><div class="hour"><div class="hour-time">15:00</div><div class="hour-temp">16°</div><div class="hour-rain"></div></div><div class="hour"><div class="hour-time">16:00</div><div class="hour-temp">17°</div><div class="hour-rain"></div></div><div class="hour"><div class="hour-time">17:00</div><div class="hour-temp">17°</div><div class="hour-rain"></div></div><div class="hour"><div class="hour-time">18:00</div><div class="hour-temp">17°</div><div class="hour-rain"></div></div><div class="hour"><div class="hour-time">19:00</div><div class="hour-temp">16°</div><div class="hour-rain"></div></div><div class="hour"><div class="hour-time">20:00</div><div class="hour-temp">15°</div><div class="hour-rain"></div></div><div class="hour"><div class="hour-time">21:00</div><div class="hour-temp">14°</div><div class="hour-rain"></div></div></div><table class="forecast"><thead><tr><th>Dag</th><th>Regn</th><th>Dag</th><th>Natt</th></tr></thead><tbody><tr><td>Thu 28.05</td><td>0 mm</td><td>15.7°</td><td>14.9°</td></tr><tr><td>Fri 29.05</td><td>0.9 mm</td><td>15.4°</td><td>11.2°</td></tr><tr><td>Sat 30.05</td><td>12.4 mm</td><td>11.2°</td><td>12.1°</td></tr><tr><td>Sun 31.05</td><td>4.2 mm</td><td>13.7°</td><td>13.2°</td></tr><tr><td>Mon 01.06</td><td>5.1 mm</td><td>13.8°</td><td>13.3°</td></tr><tr><td>Tue 02.06</td><td>6.8 mm</td><td>15.8°</td><td>14.2°</td></tr><tr><td>Wed 03.06</td><td>7.9 mm</td><td>15.0°</td><td>14.6°</td></tr></tbody></table></section><section class="weather-card"><h3>Holu gård, 3570 Ål</h3><div class="today-strip"><div class="hour"><div class="hour-time">10:00</div><div class="hour-temp">11°</div><div class="hour-rain"></div></div><div class="hour"><div class="hour-time">11:00</div><div class="hour-temp">12°</div><div class="hour-rain"></div></div><div class="hour"><div class="hour-time">12:00</div><div class="hour-temp">14°</div><div class="hour-rain"></div></div><div class="hour"><div class="hour-time">13:00</div><div class="hour-temp">15°</div><div class="hour-rain"></div></div><div class="hour"><div class="hour-time">14:00</div><div class="hour-temp">15°</div><div class="hour-rain"></div></div><div class="hour"><div class="hour-time">15:00</div><div class="hour-temp">15°</div><div class="hour-rain"></div></div><div class="hour"><div class="hour-time">16:00</div><div class="hour-temp">16°</div><div class="hour-rain"></div></div><div class="hour"><div class="hour-time">17:00</div><div class="hour-temp">16°</div><div class="hour-rain"></div></div><div class="hour"><div class="hour-time">18:00</div><div class="hour-temp">16°</div><div class="hour-rain"></div></div><div class="hour"><div class="hour-time">19:00</div><div class="hour-temp">15°</div><div class="hour-rain"></div></div><div class="hour"><div class="hour-time">20:00</div><div class="hour-temp">14°</div><div class="hour-rain"></div></div><div class="hour"><div class="hour-time">21:00</div><div class="hour-temp">13°</div><div class="hour-rain"></div></div></div><table class="forecast"><thead><tr><th>Dag</th><th>Regn</th><th>Dag</th><th>Natt</th></tr></thead><tbody><tr><td>Thu 28.05</td><td>0 mm</td><td>14.9°</td><td>13.4°</td></tr><tr><td>Fri 29.05</td><td>0 mm</td><td>16.2°</td><td>9.6°</td></tr><tr><td>Sat 30.05</td><td>0 mm</td><td>11.3°</td><td>8.0°</td></tr><tr><td>Sun 31.05</td><td>5.3 mm</td><td>14.7°</td><td>11.7°</td></tr><tr><td>Mon 01.06</td><td>7.6 mm</td><td>12.8°</td><td>13.2°</td></tr><tr><td>Tue 02.06</td><td>5.4 mm</td><td>13.6°</td><td>11.8°</td></tr><tr><td>Wed 03.06</td><td>8.1 mm</td><td>12.8°</td><td>12.9°</td></tr></tbody></table></section><section class="weather-card"><h3>Hamnavika, Tysnes</h3><div class="today-strip"><div class="hour"><div class="hour-time">10:00</div><div class="hour-temp">10°</div><div class="hour-rain"></div></div><div class="hour"><div class="hour-time">11:00</div><div class="hour-temp">12°</div><div class="hour-rain"></div></div><div class="hour"><div class="hour-time">12:00</div><div class="hour-temp">13°</div><div class="hour-rain"></div></div><div class="hour"><div class="hour-time">13:00</div><div class="hour-temp">14°</div><div class="hour-rain"></div></div><div class="hour"><div class="hour-time">14:00</div><div class="hour-temp">14°</div><div class="hour-rain"></div></div><div class="hour"><div class="hour-time">15:00</div><div class="hour-temp">14°</div><div class="hour-rain"></div></div><div class="hour"><div class="hour-time">16:00</div><div class="hour-temp">14°</div><div class="hour-rain"></div></div><div class="hour"><div class="hour-time">17:00</div><div class="hour-temp">14°</div><div class="hour-rain"></div></div><div class="hour"><div class="hour-time">18:00</div><div class="hour-temp">14°</div><div class="hour-rain"></div></div><div class="hour"><div class="hour-time">19:00</div><div class="hour-temp">13°</div><div class="hour-rain"></div></div><div class="hour"><div class="hour-time">20:00</div><div class="hour-temp">12°</div><div class="hour-rain"></div></div><div class="hour"><div class="hour-time">21:00</div><div class="hour-temp">11°</div><div class="hour-rain"></div></div></div><table class="forecast"><thead><tr><th>Dag</th><th>Regn</th><th>Dag</th><th>Natt</th></tr></thead><tbody><tr><td>Thu 28.05</td><td>0 mm</td><td>13.8°</td><td>11.6°</td></tr><tr><td>Fri 29.05</td><td>0.3 mm</td><td>13.9°</td><td>9.9°</td></tr><tr><td>Sat 30.05</td><td>7.9 mm</td><td>9.4°</td><td>10.0°</td></tr><tr><td>Sun 31.05</td><td>5.2 mm</td><td>12.1°</td><td>11.4°</td></tr><tr><td>Mon 01.06</td><td>4.0 mm</td><td>12.7°</td><td>11.8°</td></tr><tr><td>Tue 02.06</td><td>9.2 mm</td><td>14.0°</td><td>12.5°</td></tr><tr><td>Wed 03.06</td><td>9.3 mm</td><td>13.8°</td><td>13.0°</td></tr></tbody></table></section>
+  </div>
+
+  <footer>
+    Nyheter via RSS · Vær via met.no · Generert av GitHub Actions
+  </footer>
+</body>
+</html>
