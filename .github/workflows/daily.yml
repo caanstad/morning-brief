@@ -1,0 +1,55 @@
+name: Daily morning brief
+
+# 07:30 Norwegian time = 06:30 UTC in summer (CEST), 06:30 UTC in winter is 07:30 CET.
+# Norway observes DST, so we run at 05:30 UTC to hit 07:30 in winter (CET = UTC+1)
+# and 07:30 in summer (CEST = UTC+2) we'd need 05:30 UTC. We compromise by running
+# at 05:30 UTC year-round, which is 07:30 in winter and 07:30 in summer... wait.
+#
+# Cleaner: cron runs at 05:30 UTC (= 07:30 CEST summer / 06:30 CET winter)
+# AND at 06:30 UTC (= 08:30 CEST summer / 07:30 CET winter).
+# This guarantees a fresh page by 07:30 local year-round.
+
+on:
+  schedule:
+    - cron: '30 5 * * *'   # 07:30 CEST (summer) / 06:30 CET (winter)
+    - cron: '30 6 * * *'   # 08:30 CEST (summer) / 07:30 CET (winter)
+  workflow_dispatch:        # allows manual runs from the Actions tab
+  push:
+    branches: [main]
+    paths:
+      - 'fetch_brief.py'
+      - 'template.html'
+      - '.github/workflows/daily.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Generate morning brief
+        run: python fetch_brief.py
+
+      - name: Commit updated index.html
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if git diff --staged --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Update morning brief $(date -u +'%Y-%m-%d %H:%M UTC')"
+            git push
+          fi
