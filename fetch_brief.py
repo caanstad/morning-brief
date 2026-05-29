@@ -29,8 +29,8 @@ HTTP_TIMEOUT = 20  # seconds
 NEWS_SOURCES = [
     {"name": "VG",      "url": "https://www.vg.no/rss/feed/"},
     {"name": "E24",     "url": "https://e24.no/rss"},
-    {"name": "DN",      "url": "https://www.dn.no/rss/"},
-    {"name": "kode24",  "url": "https://www.kode24.no/rss"},
+    {"name": "DN",      "url": "https://services.dn.no/api/feed/rss/"},
+    {"name": "kode24",  "url": "https://rss.kode24.no/"},
 ]
 
 # Coordinates for the three locations (met.no needs lat/lon).
