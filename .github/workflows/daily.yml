@@ -11,9 +11,10 @@ name: Daily morning brief
 
 on:
   schedule:
-    - cron: '30 5 * * *'   # 07:30 CEST (summer) / 06:30 CET (winter)
-    - cron: '30 6 * * *'   # 08:30 CEST (summer) / 07:30 CET (winter)
-  workflow_dispatch:        # allows manual runs from the Actions tab
+    # GitHub Actions cron kan være forsinket 10-15+ min, så vi kjører litt tidligere.
+    - cron: '0 5 * * *'    # 07:00 CEST (sommer) / 06:00 CET (vinter)
+    - cron: '0 6 * * *'    # 08:00 CEST (sommer) / 07:00 CET (vinter)
+  workflow_dispatch:
   push:
     branches: [main]
     paths:
