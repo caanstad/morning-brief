@@ -40,3 +40,160 @@
       padding: 1rem;
       max-width: 1100px;
       margin: 0 auto;
+    }
+    header {
+      padding: 1rem 0 1.5rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1.5rem;
+    }
+    h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+    .updated {
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin-top: 0.25rem;
+    }
+    h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0 0 0.75rem;
+      color: var(--accent);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 0.75rem;
+    }
+    .news-card, .weather-card, .car-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+    }
+    .articles, .cars {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .articles li, .cars li {
+      padding: 0.6rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .articles li:last-child, .cars li:last-child { border-bottom: none; }
+    .art-title, .car-title {
+      font-weight: 500;
+      margin-bottom: 0.2rem;
+    }
+    .art-title a, .car-title a {
+      color: var(--ink);
+      text-decoration: none;
+    }
+    .art-title a:hover, .car-title a:hover { text-decoration: underline; }
+    .art-desc, .car-meta {
+      font-size: 0.875rem;
+      color: var(--muted);
+    }
+    .car-meta strong {
+      color: var(--ink);
+      font-weight: 600;
+    }
+    .see-all {
+      display: inline-block;
+      margin-top: 0.75rem;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+    .see-all:hover { text-decoration: underline; }
+    .error {
+      color: var(--error);
+      background: var(--error-bg);
+      padding: 0.5rem 0.75rem;
+      border-radius: 4px;
+      font-size: 0.875rem;
+      margin: 0;
+    }
+    .today-strip {
+      display: flex;
+      overflow-x: auto;
+      gap: 0.25rem;
+      padding-bottom: 0.5rem;
+      margin-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .hour {
+      min-width: 50px;
+      text-align: center;
+      padding: 0.25rem;
+      font-size: 0.8rem;
+    }
+    .hour-time { color: var(--muted); }
+    .hour-temp { font-weight: 600; font-size: 0.95rem; }
+    .hour-rain { color: #3b82f6; font-size: 0.7rem; min-height: 1em; }
+    table.forecast {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+    table.forecast th {
+      text-align: left;
+      color: var(--muted);
+      font-weight: 500;
+      padding: 0.4rem 0.25rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+    }
+    table.forecast td {
+      padding: 0.4rem 0.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+    table.forecast tr:last-child td { border-bottom: none; }
+    footer {
+      margin-top: 2rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.75rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>☀️ Morgenbrief</h1>
+    <div class="updated">{{DATE}} — oppdatert {{UPDATED}}</div>
+  </header>
+
+  <h2>📰 Nyheter</h2>
+  <div class="grid">
+    {{NEWS}}
+  </div>
+
+  <h2>🌦 Vær</h2>
+  <div class="grid">
+    {{WEATHER}}
+  </div>
+
+  <h2>🚗 Bil</h2>
+  <div class="grid">
+    {{CARS}}
+  </div>
+
+  <footer>
+    Nyheter via RSS · Vær via met.no · Bil via FINN.no · Generert av GitHub Actions
+  </footer>
+</body>
+</html>
