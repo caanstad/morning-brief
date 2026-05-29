@@ -1,14 +1,5 @@
 name: Daily morning brief
 
-# 07:30 Norwegian time = 06:30 UTC in summer (CEST), 06:30 UTC in winter is 07:30 CET.
-# Norway observes DST, so we run at 05:30 UTC to hit 07:30 in winter (CET = UTC+1)
-# and 07:30 in summer (CEST = UTC+2) we'd need 05:30 UTC. We compromise by running
-# at 05:30 UTC year-round, which is 07:30 in winter and 07:30 in summer... wait.
-#
-# Cleaner: cron runs at 05:30 UTC (= 07:30 CEST summer / 06:30 CET winter)
-# AND at 06:30 UTC (= 08:30 CEST summer / 07:30 CET winter).
-# This guarantees a fresh page by 07:30 local year-round.
-
 on:
   schedule:
     # GitHub Actions cron kan være forsinket 10-15+ min, så vi kjører litt tidligere.
@@ -38,7 +29,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install requests
+        run: pip install requests beautifulsoup4
 
       - name: Generate morning brief
         run: python fetch_brief.py
