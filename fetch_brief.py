@@ -1,5 +1,6 @@
 """
-Morgenbrief — fetches news (RSS) and weather (met.no) and writes index.html.
+Morgenbrief — fetches news (RSS), weather (met.no), and car listings (FINN.no)
+and writes index.html.
 
 Designed to fail gracefully: if any source is unreachable or malformed,
 that section is marked as unavailable and the rest of the page still renders.
@@ -8,6 +9,7 @@ that section is marked as unavailable and the rest of the page still renders.
 from __future__ import annotations
 
 import html
+import re
 import statistics
 import sys
 from dataclasses import dataclass, field
@@ -18,6 +20,7 @@ from xml.etree import ElementTree as ET
 from zoneinfo import ZoneInfo
 
 import requests
+from bs4 import BeautifulSoup
 
 # ---------- Configuration ----------
 
@@ -33,11 +36,24 @@ NEWS_SOURCES = [
     {"name": "kode24",  "url": "https://rss.kode24.no/"},
 ]
 
-# Coordinates for the three locations (met.no needs lat/lon).
 LOCATIONS = [
     {"name": "Bønesberget, Bergen",  "lat": 60.3500, "lon": 5.2860},
     {"name": "Holu gård, 3570 Ål",   "lat": 60.6360, "lon": 8.5590},
     {"name": "Hamnavika, Tysnes",    "lat": 60.0150, "lon": 5.5800},
+]
+
+# FINN car searches. Each entry shares filters but uses a different sort order.
+FINN_SEARCHES = [
+    {
+        "name": "🆕 Nyeste",
+        "url": "https://www.finn.no/mobility/search/car?number_of_seats_from=7&registration_class=1&sort=PUBLISHED_DESC&variant=1.8078.2000555&wheel_drive=2",
+        "max_items": 3,
+    },
+    {
+        "name": "💰 Billigste",
+        "url": "https://www.finn.no/mobility/search/car?number_of_seats_from=7&registration_class=1&sort=PRICE_ASC&variant=1.8078.2000555&wheel_drive=2",
+        "max_items": 3,
+    },
 ]
 
 
@@ -59,18 +75,35 @@ class NewsSection:
 
 @dataclass
 class DaySummary:
-    date: str            # ISO date, YYYY-MM-DD
-    day_label: str       # e.g. "Tor 29.05"
-    rain_mm: float       # total over 24h
-    temp_day: Optional[float]    # median of 06-18 local
-    temp_night: Optional[float]  # median of 18-06 local
+    date: str
+    day_label: str
+    rain_mm: float
+    temp_day: Optional[float]
+    temp_night: Optional[float]
 
 
 @dataclass
 class WeatherSection:
     name: str
-    today_hourly: list[dict] = field(default_factory=list)   # next ~12 hours
-    forecast: list[DaySummary] = field(default_factory=list)  # next 7 days
+    today_hourly: list[dict] = field(default_factory=list)
+    forecast: list[DaySummary] = field(default_factory=list)
+    error: Optional[str] = None
+
+
+@dataclass
+class CarListing:
+    title: str
+    details: str   # e.g. "2025 · 36 000 km"
+    price: str     # e.g. "479 000 kr" or "Solgt"
+    location: str  # e.g. "Nesttun"
+    link: str
+
+
+@dataclass
+class CarSection:
+    name: str
+    search_url: str
+    listings: list[CarListing] = field(default_factory=list)
     error: Optional[str] = None
 
 
@@ -87,10 +120,8 @@ def fetch_news_feed(source: dict) -> NewsSection:
         resp.raise_for_status()
         root = ET.fromstring(resp.content)
 
-        # Try RSS 2.0 first (<channel><item>), then Atom (<entry>).
         items = root.findall(".//item")
         if not items:
-            # Atom namespace handling
             ns = {"atom": "http://www.w3.org/2005/Atom"}
             items = root.findall(".//atom:entry", ns)
 
@@ -102,7 +133,6 @@ def fetch_news_feed(source: dict) -> NewsSection:
                 "{http://www.w3.org/2005/Atom}content",
             ])
             link = _first_text(item, ["link", "{http://www.w3.org/2005/Atom}link"])
-            # Atom <link> uses href attribute
             if not link:
                 link_el = item.find("{http://www.w3.org/2005/Atom}link")
                 if link_el is not None:
@@ -138,11 +168,8 @@ def _first_text(element: ET.Element, tag_candidates: list[str]) -> str:
 
 
 def _clean_text(text: str) -> str:
-    """Strip HTML tags from RSS descriptions and collapse whitespace."""
     if not text:
         return ""
-    # Very light HTML stripping (RSS descriptions sometimes contain markup).
-    import re
     text = re.sub(r"<[^>]+>", "", text)
     text = html.unescape(text)
     text = re.sub(r"\s+", " ", text).strip()
@@ -167,7 +194,6 @@ def fetch_weather(location: dict) -> WeatherSection:
         timeseries = data["properties"]["timeseries"]
         now = datetime.now(OSLO)
 
-        # ---- Today's hourly strip: next 12 hours ----
         for entry in timeseries[:12]:
             t = datetime.fromisoformat(entry["time"].replace("Z", "+00:00")).astimezone(OSLO)
             instant = entry["data"]["instant"]["details"]
@@ -180,7 +206,6 @@ def fetch_weather(location: dict) -> WeatherSection:
                 "symbol": symbol,
             })
 
-        # ---- Aggregate next 7 days ----
         by_date: dict[str, list[dict]] = {}
         for entry in timeseries:
             t = datetime.fromisoformat(entry["time"].replace("Z", "+00:00")).astimezone(OSLO)
@@ -200,10 +225,8 @@ def fetch_weather(location: dict) -> WeatherSection:
                 continue
             entries = by_date[key]
 
-            # Rain: prefer 1h values; fall back to 6h (every 6h) if 1h not available.
             rain_total = sum(e["rain_1h"] for e in entries if e["rain_1h"] is not None)
             if rain_total == 0:
-                # 6h blocks: take entries at 0, 6, 12, 18 (whichever exist)
                 seen_blocks = set()
                 fallback = 0.0
                 for e in entries:
@@ -242,6 +265,110 @@ def fetch_weather(location: dict) -> WeatherSection:
     return section
 
 
+# ---------- FINN car listing fetching ----------
+
+def fetch_finn_section(search: dict) -> CarSection:
+    section = CarSection(name=search["name"], search_url=search["url"])
+    try:
+        resp = requests.get(
+            search["url"],
+            headers={
+                "User-Agent": USER_AGENT,
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                "Accept-Language": "nb-NO,nb;q=0.9,en;q=0.8",
+            },
+            timeout=HTTP_TIMEOUT,
+        )
+        resp.raise_for_status()
+        soup = BeautifulSoup(resp.text, "html.parser")
+
+        # FINN search results: find every unique link to /mobility/item/<id>,
+        # then walk up to a containing element and extract data from its text.
+        seen_ids: set[str] = set()
+        item_links = soup.find_all("a", href=re.compile(r"/mobility/item/\d+"))
+
+        for link_el in item_links:
+            if len(section.listings) >= search["max_items"]:
+                break
+
+            href = link_el.get("href", "")
+            m = re.search(r"/mobility/item/(\d+)", href)
+            if not m:
+                continue
+            item_id = m.group(1)
+            if item_id in seen_ids:
+                continue
+            seen_ids.add(item_id)
+
+            # Walk up to the article-like container holding this listing's data.
+            container = link_el.find_parent("article")
+            if container is None:
+                container = link_el.find_parent(
+                    lambda tag: tag.name in ("section", "div") and tag.find(["h2", "h3"])
+                )
+            if container is None:
+                container = link_el.parent
+
+            text = container.get_text(separator="\n", strip=True) if container else ""
+
+            # Title (typically inside an <h2> or <h3>)
+            title_el = container.find(["h2", "h3"]) if container else None
+            title = title_el.get_text(strip=True) if title_el else "Bil"
+
+            # Price — look for "XXX XXX kr" or "Solgt"
+            price = ""
+            price_match = re.search(r"(\d[\d\s]{2,})\s*kr\b", text)
+            if price_match:
+                price = re.sub(r"\s+", " ", price_match.group(0)).strip()
+            elif "Solgt" in text:
+                price = "Solgt"
+
+            # Year + km — pattern like "2025 ∙ 36 000 km"
+            details = ""
+            details_match = re.search(
+                r"((?:19|20)\d{2})\s*[∙·•|]\s*([\d\s]{1,10}km)",
+                text,
+            )
+            if details_match:
+                year = details_match.group(1)
+                km = re.sub(r"\s+", " ", details_match.group(2)).strip()
+                details = f"{year} · {km}"
+
+            # Location — first part of the line containing "Forhandler"/"Privat"/"Smidig"
+            location = ""
+            for line in text.split("\n"):
+                line = line.strip()
+                if any(marker in line for marker in ("Forhandler", "Privat", "Smidig")):
+                    parts = re.split(r"[∙·•]", line)
+                    if parts:
+                        location = parts[0].strip()
+                        break
+
+            # Build full link
+            if href.startswith("/"):
+                href = "https://www.finn.no" + href
+
+            section.listings.append(CarListing(
+                title=title,
+                details=details,
+                price=price,
+                location=location,
+                link=href,
+            ))
+
+        if not section.listings:
+            section.error = "Ingen treff funnet (kan være endret HTML-struktur eller blokkering)."
+
+    except requests.HTTPError as e:
+        section.error = f"HTTP-feil fra FINN: {e.response.status_code}"
+    except requests.RequestException as e:
+        section.error = f"Nettverksfeil mot FINN: {type(e).__name__}"
+    except Exception as e:
+        section.error = f"Ukjent feil: {type(e).__name__}: {e}"
+
+    return section
+
+
 # ---------- Rendering ----------
 
 def render_news_card(section: NewsSection) -> str:
@@ -274,7 +401,6 @@ def render_weather_card(section: WeatherSection) -> str:
     if section.error:
         body = f'<p class="error">⚠️ Kunne ikke hente vær: {html.escape(section.error)}</p>'
     else:
-        # Today strip
         hourly_cells = []
         for h in section.today_hourly:
             temp = f"{h['temp']:.0f}°" if h['temp'] is not None else "–"
@@ -287,7 +413,6 @@ def render_weather_card(section: WeatherSection) -> str:
             )
         today_strip = f'<div class="today-strip">{"".join(hourly_cells)}</div>'
 
-        # 7-day table
         rows = []
         for d in section.forecast:
             temp_day = f"{d.temp_day:.1f}°" if d.temp_day is not None else "–"
@@ -315,13 +440,56 @@ def render_weather_card(section: WeatherSection) -> str:
     )
 
 
-def render_page(news: list[NewsSection], weather: list[WeatherSection]) -> str:
+def render_car_card(section: CarSection) -> str:
+    if section.error:
+        body = f'<p class="error">⚠️ Kunne ikke hente: {html.escape(section.error)}</p>'
+    elif not section.listings:
+        body = '<p class="error">⚠️ Ingen treff.</p>'
+    else:
+        items = []
+        for car in section.listings:
+            title_html = html.escape(car.title)
+            if car.link:
+                title_html = f'<a href="{html.escape(car.link)}" target="_blank" rel="noopener">{title_html}</a>'
+
+            meta_parts = []
+            if car.details:
+                meta_parts.append(html.escape(car.details))
+            if car.price:
+                meta_parts.append(f'<strong>{html.escape(car.price)}</strong>')
+            if car.location:
+                meta_parts.append(html.escape(car.location))
+            meta_html = " · ".join(meta_parts)
+
+            items.append(
+                f'<li><div class="car-title">{title_html}</div>'
+                f'<div class="car-meta">{meta_html}</div></li>'
+            )
+        body = f'<ul class="cars">{"".join(items)}</ul>'
+
+    search_link = (
+        f'<a class="see-all" href="{html.escape(section.search_url)}" '
+        f'target="_blank" rel="noopener">Se alle treff på FINN →</a>'
+    )
+
+    return (
+        f'<section class="car-card">'
+        f'<h3>{html.escape(section.name)}</h3>'
+        f'{body}'
+        f'{search_link}'
+        f'</section>'
+    )
+
+
+def render_page(news: list[NewsSection], weather: list[WeatherSection],
+                cars: list[CarSection]) -> str:
     now = datetime.now(OSLO)
     date_str = now.strftime("%A %d. %B %Y").capitalize()
     time_str = now.strftime("%H:%M")
 
     news_html = "".join(render_news_card(s) for s in news)
     weather_html = "".join(render_weather_card(w) for w in weather)
+    cars_html = "".join(render_car_card(c) for c in cars)
 
     template = Path(__file__).parent / "template.html"
     html_template = template.read_text(encoding="utf-8")
@@ -330,7 +498,8 @@ def render_page(news: list[NewsSection], weather: list[WeatherSection]) -> str:
             .replace("{{DATE}}", html.escape(date_str))
             .replace("{{UPDATED}}", html.escape(time_str))
             .replace("{{NEWS}}", news_html)
-            .replace("{{WEATHER}}", weather_html))
+            .replace("{{WEATHER}}", weather_html)
+            .replace("{{CARS}}", cars_html))
 
 
 # ---------- Main ----------
@@ -350,8 +519,14 @@ def main() -> int:
         status = f"{len(w.forecast)} days" if not w.error else f"ERROR: {w.error}"
         print(f"  {w.name}: {status}")
 
+    print("Fetching car listings…")
+    car_sections = [fetch_finn_section(s) for s in FINN_SEARCHES]
+    for c in car_sections:
+        status = f"{len(c.listings)} listings" if not c.error else f"ERROR: {c.error}"
+        print(f"  {c.name}: {status}")
+
     print("Rendering HTML…")
-    output_html = render_page(news_sections, weather_sections)
+    output_html = render_page(news_sections, weather_sections, car_sections)
 
     output_path = Path(__file__).parent / "index.html"
     output_path.write_text(output_html, encoding="utf-8")
