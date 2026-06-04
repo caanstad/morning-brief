@@ -270,7 +270,7 @@ def fetch_weather(location: dict) -> WeatherSection:
 def fetch_finn_section(search: dict) -> CarSection:
     section = CarSection(name=search["name"], search_url=search["url"])
     try:
-resp = requests.get(
+        resp = requests.get(
             search["url"],
             headers={
                 "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
