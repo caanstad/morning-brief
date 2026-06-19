@@ -87,6 +87,7 @@ class WeatherSection:
     name: str
     today_hourly: list[dict] = field(default_factory=list)
     forecast: list[DaySummary] = field(default_factory=list)
+    forecast_avg_rain: Optional[float] = None
     error: Optional[str] = None
 
 
@@ -249,6 +250,11 @@ def fetch_weather(location: dict) -> WeatherSection:
                 temp_day=round(statistics.median(day_temps), 1) if day_temps else None,
                 temp_night=round(statistics.median(night_temps), 1) if night_temps else None,
             ))
+
+        if section.forecast:
+            section.forecast_avg_rain = round(
+                sum(d.rain_mm for d in section.forecast) / len(section.forecast), 1
+            )
 
         if not section.forecast:
             section.error = "Ingen prognosedata mottatt."
@@ -439,7 +445,15 @@ def render_weather_card(section: WeatherSection) -> str:
             f'<tbody>{"".join(rows)}</tbody>'
             '</table>'
         )
-        body = today_strip + forecast_table
+        if section.forecast_avg_rain is not None:
+            avg_html = (
+                f'<div class="forecast-avg">Gjennomsnitt nedbør neste '
+                f'{len(section.forecast)} dager: '
+                f'<strong>{section.forecast_avg_rain:.1f} mm/dag</strong></div>'
+            )
+        else:
+            avg_html = ''
+        body = today_strip + forecast_table + avg_html
 
     return (
         f'<section class="weather-card">'
